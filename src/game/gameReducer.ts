@@ -1,6 +1,6 @@
 import { TOTAL_ROUNDS, type SimonColor } from './colors.ts';
 
-export type GameStatus = 'idle' | 'presenting' | 'awaitingInput' | 'won' | 'lost';
+export type GameStatus = 'idle' | 'presenting' | 'awaitingInput' | 'paused' | 'won' | 'lost';
 
 export type GameState = {
   status: GameStatus;
@@ -18,7 +18,8 @@ export type GameAction =
   | { type: 'start'; firstColor: SimonColor }
   | { type: 'presentationDone'; presentationId: number }
   | { type: 'press'; color: SimonColor; nextColor: SimonColor }
-  | { type: 'abandon' };
+  | { type: 'pause' }
+  | { type: 'resume' };
 
 export const initialGameState: GameState = {
   status: 'idle',
@@ -73,7 +74,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
 
-    case 'abandon':
-      return { ...initialGameState, gameId: state.gameId, presentationId: state.presentationId };
+    // Pausing keeps the sequence and round but drops partial input; bumping
+    // presentationId makes any completion from the cancelled playback stale.
+    case 'pause':
+      if (state.status !== 'presenting' && state.status !== 'awaitingInput') return state;
+      return { ...state, status: 'paused', inputIndex: 0, presentationId: state.presentationId + 1 };
+
+    // Resuming replays the same round's full sequence from the start.
+    case 'resume':
+      if (state.status !== 'paused') return state;
+      return { ...state, status: 'presenting', inputIndex: 0, presentationId: state.presentationId + 1 };
   }
 }

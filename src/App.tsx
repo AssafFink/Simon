@@ -12,8 +12,8 @@ export default function App() {
   const game = useGame();
 
   const navigate = (next: Screen) => {
-    // Temporary (until pause arrives in Milestone 3): leaving home cancels the game.
-    if (next === 'about' && game.state.status !== 'idle') game.abandon();
+    // Leaving home pauses an active game; it resumes only via "המשך משחק".
+    if (next === 'about') game.pause();
     setScreen(next);
   };
 
@@ -27,6 +27,7 @@ export default function App() {
           litColor={game.litColor}
           audioError={game.audioError}
           onStart={game.start}
+          onResume={game.resume}
           onPressStart={game.pressStart}
           onPressEnd={game.pressEnd}
         />

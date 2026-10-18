@@ -103,8 +103,62 @@ describe('gameReducer', () => {
     expect(start('blue', s)).toBe(s);
   });
 
-  it('abandon returns to idle', () => {
-    const s = gameReducer(presented(start('green')), { type: 'abandon' });
-    expect(s).toMatchObject({ status: 'idle', sequence: [], round: 1 });
+  it('pauses while presenting, keeping sequence and round', () => {
+    const s = completeRound(start('green'), 'blue');
+    const paused = gameReducer(s, { type: 'pause' });
+    expect(paused).toMatchObject({
+      status: 'paused',
+      sequence: s.sequence,
+      round: 2,
+      completedRounds: 1,
+      inputIndex: 0,
+      gameId: s.gameId,
+    });
+  });
+
+  it('pauses during the player turn and drops partial input', () => {
+    let s = presented(completeRound(start('green'), 'blue'));
+    s = press(s, 'green');
+    expect(s.inputIndex).toBe(1);
+    const paused = gameReducer(s, { type: 'pause' });
+    expect(paused).toMatchObject({ status: 'paused', inputIndex: 0, round: 2, sequence: ['green', 'blue'] });
+  });
+
+  it('ignores pause when no game is active', () => {
+    const lost = press(presented(start('green')), 'red');
+    const won = (() => {
+      let s = start('green');
+      for (let i = 0; i < 10; i++) s = completeRound(s, 'yellow');
+      return s;
+    })();
+    const paused = gameReducer(start('green'), { type: 'pause' });
+    for (const s of [initialGameState, lost, won, paused]) {
+      expect(gameReducer(s, { type: 'pause' })).toBe(s);
+    }
+  });
+
+  it('ignores presses, starts and stale completions while paused', () => {
+    const presenting = start('green');
+    const paused = gameReducer(presenting, { type: 'pause' });
+    expect(press(paused, 'green')).toBe(paused);
+    expect(start('blue', paused)).toBe(paused);
+    expect(gameReducer(paused, { type: 'presentationDone', presentationId: presenting.presentationId })).toBe(paused);
+    expect(gameReducer(paused, { type: 'presentationDone', presentationId: paused.presentationId })).toBe(paused);
+  });
+
+  it('resume replays the same round with no new color', () => {
+    const s = presented(completeRound(start('green'), 'blue'));
+    const paused = gameReducer(press(s, 'green'), { type: 'pause' });
+    const resumed = gameReducer(paused, { type: 'resume' });
+    expect(resumed).toMatchObject({ status: 'presenting', sequence: ['green', 'blue'], round: 2, inputIndex: 0 });
+    expect(resumed.presentationId).toBeGreaterThan(paused.presentationId);
+    // A completion from before the pause can't hand over the turn.
+    expect(gameReducer(resumed, { type: 'presentationDone', presentationId: s.presentationId })).toBe(resumed);
+  });
+
+  it('ignores a second resume and resume outside the paused state', () => {
+    const resumed = gameReducer(gameReducer(start('green'), { type: 'pause' }), { type: 'resume' });
+    expect(gameReducer(resumed, { type: 'resume' })).toBe(resumed);
+    expect(gameReducer(initialGameState, { type: 'resume' })).toBe(initialGameState);
   });
 });

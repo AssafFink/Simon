@@ -228,26 +228,221 @@ describe('game flow', () => {
     expect(screen.getByText('המשחק מציג את הרצף')).toBeInTheDocument();
   });
 
-  it.each(['presenting', 'player turn'])('leaving for "אודות" while %s cancels the game cleanly', async (phase) => {
+  const nav = () => within(screen.getByRole('navigation', { name: 'ניווט ראשי' }));
+  const goTo = (name: 'אודות' | 'בית') => user.click(nav().getByRole('button', { name }));
+  const setVisibility = async (value: 'hidden' | 'visible') => {
+    Object.defineProperty(document, 'visibilityState', { value, configurable: true });
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+  };
+  const toneCount = () => audio.startTone.mock.calls.length;
+  const resumeButton = () => screen.queryByRole('button', { name: 'המשך משחק' });
+
+  // Plays round 1, then watches round 2 and returns its pads once the turn is handed over.
+  async function reachRound2Turn(u: User) {
+    await clickStart(u);
+    await playRound(u, 1);
+    const seen = await watchPresentation(2);
+    expect(screen.getByText('התור שלך')).toBeInTheDocument();
+    return seen;
+  }
+
+  function expectPausedHome(round: number) {
+    expect(screen.getByText('המשחק מושהה')).toBeInTheDocument();
+    expect(resumeButton()).toBeInTheDocument();
+    expect(document.querySelector('.simon-board')?.getAttribute('data-mode')).toBe('paused');
+    expect(litLabel()).toBeNull();
+    roundText(round);
+  }
+
+  // Resumes and watches the full sequence replay from its first color.
+  async function resumeAndWatch(u: User, length: number) {
+    audio.startTone.mockClear();
+    await clickStart(u, 'המשך משחק');
+    expect(screen.getByText('המשחק מציג את הרצף')).toBeInTheDocument();
+    await advance(LEAD_IN_MS - 1);
+    expect(litLabel()).toBeNull();
+    await advance(1);
+    const seen: string[] = [];
+    for (let i = 0; i < length; i++) {
+      seen.push(litLabel()!);
+      await advance(FLASH_MS);
+      if (i < length - 1) await advance(GAP_MS);
+    }
+    expect(toneCount()).toBe(length);
+    expect(screen.getByText('התור שלך')).toBeInTheDocument();
+    return seen;
+  }
+
+  afterEach(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  });
+
+  it('leaving for "אודות" mid-presentation pauses at once and waits for "המשך משחק"', async () => {
     const user = setup();
     await clickStart(user);
     await advance(LEAD_IN_MS + 100);
-    if (phase === 'player turn') {
-      await advance(FLASH_MS);
-      expect(screen.getByText('התור שלך')).toBeInTheDocument();
-    } else {
-      expect(litLabel()).not.toBeNull();
-    }
-    const nav = within(screen.getByRole('navigation', { name: 'ניווט ראשי' }));
+    const first = litLabel();
+    expect(first).not.toBeNull();
 
-    await user.click(nav.getByRole('button', { name: 'אודות' }));
+    await goTo('אודות');
     expect(audio.stopAllSounds).toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
 
-    await user.click(nav.getByRole('button', { name: 'בית' }));
-    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
-    expect(litLabel()).toBeNull();
+    audio.startTone.mockClear();
+    await goTo('בית');
+    await advance(10_000);
+    expect(audio.startTone).not.toHaveBeenCalled();
+    expectPausedHome(1);
+
+    expect(await resumeAndWatch(user, 1)).toEqual([first]);
     roundText(1);
+  });
+
+  it('pausing during the player turn drops partial input and replays the whole round', async () => {
+    const user = setup();
+    const seen = await reachRound2Turn(user);
+    await user.click(pad(seen[0]));
+
+    await goTo('אודות');
+    expect(audio.stopAllSounds).toHaveBeenCalled();
+    expect(litLabel()).toBeNull();
+    expect(vi.getTimerCount()).toBe(0);
+    await goTo('בית');
+    expectPausedHome(2);
+    // Pads are locked while paused.
+    await user.click(pad(seen[1]));
+    expect(screen.getByText('המשחק מושהה')).toBeInTheDocument();
+
+    expect(await resumeAndWatch(user, 2)).toEqual(seen);
+    roundText(2);
+    // Input restarts from the first color; completing it moves on to round 3.
+    for (const label of seen) await user.click(pad(label));
+    await advance(ROUND_PAUSE_MS);
+    roundText(3);
+    expect(screen.queryByText('נפסלת!')).toBeNull();
+    expect(audio.playLoseSound).not.toHaveBeenCalled();
+  });
+
+  it('pausing between rounds shows the new round and replays its full sequence', async () => {
+    const user = setup();
+    await clickStart(user);
+    await playRound(user, 1);
+    await advance(ROUND_PAUSE_MS / 2);
+
+    await goTo('אודות');
+    await goTo('בית');
+    expectPausedHome(2);
+    expect(await resumeAndWatch(user, 2)).toHaveLength(2);
+  });
+
+  it('hiding the app pauses the same way, and showing it again does not resume', async () => {
+    const user = setup();
+    const seen = await reachRound2Turn(user);
+    await user.click(pad(seen[0]));
+
+    await setVisibility('hidden');
+    expect(audio.stopAllSounds).toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    audio.startTone.mockClear();
+    await setVisibility('visible');
+    await advance(10_000);
+    expect(audio.startTone).not.toHaveBeenCalled();
+    expectPausedHome(2);
+
+    // Hiding again while paused, or while "אודות" is open, changes nothing.
+    await goTo('אודות');
+    await setVisibility('hidden');
+    await setVisibility('visible');
+    await goTo('בית');
+    expectPausedHome(2);
+
+    expect(await resumeAndWatch(user, 2)).toEqual(seen);
+  });
+
+  it('pagehide pauses an active presentation', async () => {
+    setup();
+    await clickStart(user);
+    await advance(LEAD_IN_MS + 100);
+    await act(async () => {
+      window.dispatchEvent(new Event('pagehide'));
+    });
+    expectPausedHome(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('a double tap on "המשך משחק" plays the sequence only once', async () => {
+    const user = setup();
+    await reachRound2Turn(user);
+    await goTo('אודות');
+    await goTo('בית');
+
+    audio.startTone.mockClear();
+    const button = resumeButton()!;
+    await user.click(button);
+    await user.click(button);
+    await act(async () => {});
+    await advance(LEAD_IN_MS + 2 * FLASH_MS + GAP_MS);
+    expect(toneCount()).toBe(2);
+    expect(screen.getByText('התור שלך')).toBeInTheDocument();
+  });
+
+  it('stays paused with a message when audio cannot be resumed', async () => {
+    const user = setup();
+    await clickStart(user);
+    await goTo('אודות');
+    await goTo('בית');
+
+    audio.unlockAudio.mockImplementation(async () => false);
+    await clickStart(user, 'המשך משחק');
+    expect(screen.getByText('לא ניתן להפעיל את הצלילים. לחץ שוב על "המשך משחק".')).toBeInTheDocument();
+    expect(resumeButton()).toBeInTheDocument();
+    await advance(10_000);
+    expect(litLabel()).toBeNull();
+
+    audio.unlockAudio.mockImplementation(async () => true);
+    await resumeAndWatch(user, 1);
+  });
+
+  it('shows "המשך משחק" only for a paused game; leaving a finished game keeps its result', async () => {
+    const user = setup();
+    expect(resumeButton()).toBeNull();
+    await goTo('אודות');
+    await goTo('בית');
+    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
+    expect(resumeButton()).toBeNull();
+
+    await clickStart(user);
+    expect(resumeButton()).toBeNull();
+    const [label] = await watchPresentation(1);
+    expect(resumeButton()).toBeNull();
+    await user.click(pad(otherLabel(label)));
+    await advance(RESULT_DELAY_MS);
+    expect(screen.getByText('נפסלת!')).toBeInTheDocument();
+
+    await goTo('אודות');
+    await setVisibility('hidden');
+    await setVisibility('visible');
+    await goTo('בית');
+    expect(screen.getByText('נפסלת!')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'שחק שוב' })).toBeInTheDocument();
+    expect(resumeButton()).toBeNull();
+  });
+
+  it('a reload while paused resets to the start state without persisting anything', async () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    const user = setup();
+    await reachRound2Turn(user);
+    await goTo('אודות');
+
+    cleanup();
+    render(<App />);
+    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
+    expect(resumeButton()).toBeNull();
+    roundText(1);
+    expect(setItem).not.toHaveBeenCalled();
+    setItem.mockRestore();
   });
 
   it('a page reload resets to the start state and nothing is persisted', async () => {

@@ -12,6 +12,7 @@ type Props = {
   litColor: SimonColor | null;
   audioError: boolean;
   onStart: () => void;
+  onResume: () => void;
   onPressStart: (color: SimonColor) => void;
   onPressEnd: () => void;
 };
@@ -20,18 +21,21 @@ const BOARD_MODE: Record<GameState['status'], BoardMode> = {
   idle: 'idle',
   presenting: 'presenting',
   awaitingInput: 'input',
+  paused: 'paused',
   won: 'over',
   lost: 'over',
 };
 
-export default function HomeScreen({ game, displayRound, showResult, litColor, audioError, onStart, onPressStart, onPressEnd }: Props) {
+export default function HomeScreen({ game, displayRound, showResult, litColor, audioError, onStart, onResume, onPressStart, onPressEnd }: Props) {
   const { status } = game;
   const isOver = status === 'won' || status === 'lost';
 
   let statusText = '';
-  if (audioError) statusText = `לא ניתן להפעיל את הצלילים. לחץ שוב על "${isOver ? 'שחק שוב' : 'התחל'}".`;
+  const retryLabel = status === 'paused' ? 'המשך משחק' : isOver ? 'שחק שוב' : 'התחל';
+  if (audioError) statusText = `לא ניתן להפעיל את הצלילים. לחץ שוב על "${retryLabel}".`;
   else if (status === 'presenting') statusText = 'המשחק מציג את הרצף';
   else if (status === 'awaitingInput') statusText = 'התור שלך';
+  else if (status === 'paused') statusText = 'המשחק מושהה';
 
   return (
     <section className="home-screen">
@@ -54,6 +58,7 @@ export default function HomeScreen({ game, displayRound, showResult, litColor, a
       </div>
       <div className="home-action">
         {status === 'idle' && <PrimaryButton onClick={onStart}>התחל</PrimaryButton>}
+        {status === 'paused' && <PrimaryButton onClick={onResume}>המשך משחק</PrimaryButton>}
         {status === 'presenting' && <p className="action-hint">המתן...</p>}
         {status === 'awaitingInput' && <p className="action-hint">הקש על הצבעים לפי הסדר</p>}
       </div>

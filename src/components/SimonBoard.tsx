@@ -2,7 +2,7 @@ import type { KeyboardEvent } from 'react';
 import { COLORS, type SimonColor } from '../game/colors.ts';
 import './SimonBoard.css';
 
-export type BoardMode = 'idle' | 'presenting' | 'input' | 'over';
+export type BoardMode = 'idle' | 'presenting' | 'input' | 'paused' | 'over';
 
 type Props = {
   mode?: BoardMode;

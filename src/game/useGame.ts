@@ -31,6 +31,7 @@ export function useGame() {
   stateRef.current = state;
   const pressRef = useRef<ActivePress | null>(null);
   const startingRef = useRef(false);
+  const resumingRef = useRef(false);
 
   const finishPress = useCallback(() => {
     const press = pressRef.current;
@@ -164,13 +165,44 @@ export function useGame() {
   const pressEndRef = useRef(pressEnd);
   pressEndRef.current = pressEnd;
 
-  const abandon = useCallback(() => {
+  // Pausing stops light, tone and timers at once; the presentation effect aborts
+  // itself because the status changes. Finished or idle games are left alone.
+  const pause = useCallback(() => {
+    const status = stateRef.current.status;
+    if (status !== 'presenting' && status !== 'awaitingInput') return;
     finishPress();
     stopAllSounds();
     setAudioError(false);
     setRoundHiddenFor(null);
-    dispatch({ type: 'abandon' });
+    dispatch({ type: 'pause' });
   }, [finishPress]);
+
+  // Only an explicit "המשך משחק" press resumes; the browser may have suspended audio meanwhile.
+  const resume = useCallback(async () => {
+    if (resumingRef.current || stateRef.current.status !== 'paused') return;
+    resumingRef.current = true;
+    try {
+      const ok = await unlockAudio();
+      setAudioError(!ok);
+      if (ok && stateRef.current.status === 'paused') dispatch({ type: 'resume' });
+    } finally {
+      resumingRef.current = false;
+    }
+  }, []);
+
+  // Visibility handler: hiding the app (background, lock screen, tab switch) pauses.
+  // Becoming visible again does nothing, so there is no automatic resume.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') pause();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', pause);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', pause);
+    };
+  }, [pause]);
 
   return {
     state,
@@ -181,6 +213,7 @@ export function useGame() {
     start,
     pressStart,
     pressEnd,
-    abandon,
+    pause,
+    resume,
   };
 }
