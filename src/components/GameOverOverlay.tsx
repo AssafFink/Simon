@@ -5,10 +5,11 @@ import './GameOverOverlay.css';
 type Props = {
   outcome: 'won' | 'lost';
   completedRounds: number;
-  onPlayAgain: () => void;
+  saveError: boolean;
+  onDismiss: () => void;
 };
 
-export default function GameOverOverlay({ outcome, completedRounds, onPlayAgain }: Props) {
+export default function GameOverOverlay({ outcome, completedRounds, saveError, onDismiss }: Props) {
   const titleId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -39,8 +40,13 @@ export default function GameOverOverlay({ outcome, completedRounds, onPlayAgain 
           </p>
         </>
       )}
-      <PrimaryButton ref={buttonRef} onClick={onPlayAgain}>
-        שחק שוב
+      {saveError && (
+        <p className="game-over-save-error" role="alert">
+          לא ניתן היה לשמור את התוצאה בהיסטוריה.
+        </p>
+      )}
+      <PrimaryButton ref={buttonRef} onClick={onDismiss}>
+        אישור
       </PrimaryButton>
     </div>
   );

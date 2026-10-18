@@ -48,7 +48,7 @@ const litLabel = () => document.querySelector('.simon-pad[data-lit="true"]')?.ge
 const roundText = (n: number) =>
   screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === `שלב ${n} מתוך 10`);
 
-async function clickStart(user: User, name = 'התחל') {
+async function clickStart(user: User, name = 'התחל משחק') {
   await user.click(screen.getByRole('button', { name }));
   await act(async () => {});
 }
@@ -89,7 +89,7 @@ describe('game flow', () => {
 
     expect(screen.getByText('המשחק מציג את הרצף')).toBeInTheDocument();
     expect(screen.getByText('המתן...')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'התחל' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'התחל משחק' })).not.toBeInTheDocument();
 
     await advance(LEAD_IN_MS);
     const shown = litLabel()!;
@@ -199,15 +199,24 @@ describe('game flow', () => {
     expect(screen.queryByText('המשחק מציג את הרצף')).not.toBeInTheDocument();
   });
 
-  it('"שחק שוב" starts a new game from round 1 with a new sequence', async () => {
+  it('"אישור" closes the result and returns to "התחל משחק"; the next game has a new sequence', async () => {
     const user = setup();
     await clickStart(user);
     const [first] = await watchPresentation(1);
     await user.click(pad(otherLabel(first)));
     await advance(RESULT_DELAY_MS);
+    expect(screen.getByRole('button', { name: 'אישור' })).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'שחק שוב' })).toBeNull();
 
-    await clickStart(user, 'שחק שוב');
+    await user.click(screen.getByRole('button', { name: 'אישור' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'התחל משחק' })).toBeInTheDocument();
+    roundText(1);
+    // Closing the message does not start a game by itself.
+    await advance(10_000);
+    expect(screen.queryByText('המשחק מציג את הרצף')).toBeNull();
+
+    await clickStart(user);
     roundText(1);
     const [next] = await watchPresentation(1);
     expect(next).not.toBe(first);
@@ -218,8 +227,8 @@ describe('game flow', () => {
     const user = setup();
     await clickStart(user);
 
-    expect(screen.getByText('לא ניתן להפעיל את הצלילים. לחץ שוב על "התחל".')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
+    expect(screen.getByText('לא ניתן להפעיל את הצלילים. לחץ שוב על "התחל משחק".')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'התחל משחק' })).toBeInTheDocument();
     await advance(5000);
     expect(audio.startTone).not.toHaveBeenCalled();
 
@@ -410,7 +419,7 @@ describe('game flow', () => {
     expect(resumeButton()).toBeNull();
     await goTo('אודות');
     await goTo('בית');
-    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'התחל משחק' })).toBeInTheDocument();
     expect(resumeButton()).toBeNull();
 
     await clickStart(user);
@@ -426,7 +435,7 @@ describe('game flow', () => {
     await setVisibility('visible');
     await goTo('בית');
     expect(screen.getByText('נפסלת!')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'שחק שוב' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'אישור' })).toBeInTheDocument();
     expect(resumeButton()).toBeNull();
   });
 
@@ -438,7 +447,7 @@ describe('game flow', () => {
 
     cleanup();
     render(<App />);
-    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'התחל משחק' })).toBeInTheDocument();
     expect(resumeButton()).toBeNull();
     roundText(1);
     expect(setItem).not.toHaveBeenCalled();
@@ -454,7 +463,7 @@ describe('game flow', () => {
     // A reload throws away the whole React tree and mounts a fresh one.
     cleanup();
     render(<App />);
-    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'התחל משחק' })).toBeInTheDocument();
     roundText(1);
     expect(setItem).not.toHaveBeenCalled();
     setItem.mockRestore();

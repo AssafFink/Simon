@@ -161,4 +161,19 @@ describe('gameReducer', () => {
     expect(gameReducer(resumed, { type: 'resume' })).toBe(resumed);
     expect(gameReducer(initialGameState, { type: 'resume' })).toBe(initialGameState);
   });
+
+  it('dismiss returns a finished game to the start state and keeps counting games', () => {
+    const lost = press(presented(start('green')), 'red');
+    const s = gameReducer(lost, { type: 'dismiss' });
+    expect(s).toMatchObject({ status: 'idle', sequence: [], round: 1, inputIndex: 0, completedRounds: 0, gameId: lost.gameId });
+    expect(start('blue', s).gameId).toBe(lost.gameId + 1);
+  });
+
+  it('ignores dismiss while a game is running or paused', () => {
+    const presenting = start();
+    expect(gameReducer(presenting, { type: 'dismiss' })).toBe(presenting);
+    const paused = gameReducer(presenting, { type: 'pause' });
+    expect(gameReducer(paused, { type: 'dismiss' })).toBe(paused);
+    expect(gameReducer(initialGameState, { type: 'dismiss' })).toBe(initialGameState);
+  });
 });

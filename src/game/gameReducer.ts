@@ -19,7 +19,8 @@ export type GameAction =
   | { type: 'presentationDone'; presentationId: number }
   | { type: 'press'; color: SimonColor; nextColor: SimonColor }
   | { type: 'pause' }
-  | { type: 'resume' };
+  | { type: 'resume' }
+  | { type: 'dismiss' };
 
 export const initialGameState: GameState = {
   status: 'idle',
@@ -84,5 +85,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'resume':
       if (state.status !== 'paused') return state;
       return { ...state, status: 'presenting', inputIndex: 0, presentationId: state.presentationId + 1 };
+
+    // "אישור" on the result message returns to the start state; gameId is kept
+    // so the next game still gets a new one.
+    case 'dismiss':
+      if (state.status !== 'won' && state.status !== 'lost') return state;
+      return { ...initialGameState, gameId: state.gameId, presentationId: state.presentationId };
   }
 }

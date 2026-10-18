@@ -190,6 +190,9 @@ export function useGame() {
     }
   }, []);
 
+  // Closing the result message ends the finished game and shows "התחל משחק" again.
+  const dismiss = useCallback(() => dispatch({ type: 'dismiss' }), []);
+
   // Visibility handler: hiding the app (background, lock screen, tab switch) pauses.
   // Becoming visible again does nothing, so there is no automatic resume.
   useEffect(() => {
@@ -215,5 +218,6 @@ export function useGame() {
     pressEnd,
     pause,
     resume,
+    dismiss,
   };
 }

@@ -1,0 +1,40 @@
+.history-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.history-card-main p {
+  margin: 0;
+}
+
+.history-card-rounds {
+  font-size: var(--font-body);
+  font-weight: 700;
+  color: var(--color-white);
+}
+
+.history-card-outcome {
+  font-size: var(--font-caption);
+  color: var(--color-text-muted);
+}
+
+.history-card-outcome--win {
+  color: var(--color-green);
+}
+
+.history-card-outcome--loss {
+  color: #ff6b62;
+}
+
+.history-card-time {
+  flex-shrink: 0;
+  font-size: var(--font-caption);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}

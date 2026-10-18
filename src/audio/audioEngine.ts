@@ -22,7 +22,7 @@ function getCtor(): AudioContextCtor | undefined {
   return w.AudioContext ?? w.webkitAudioContext;
 }
 
-// Must be called from a user gesture ("התחל" / "שחק שוב").
+// Must be called from a user gesture ("התחל משחק" / "המשך משחק").
 export async function unlockAudio(): Promise<boolean> {
   try {
     if (!ctx) {

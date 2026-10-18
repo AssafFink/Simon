@@ -1,0 +1,71 @@
+.confirm-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: rgba(3, 8, 16, 0.82);
+}
+
+/* Light card, as in the delete-confirmation mockup. */
+.confirm-dialog {
+  width: 100%;
+  max-width: 340px;
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  background: #f5f7fa;
+  border: 1px solid var(--color-soft-gray);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  color: var(--color-charcoal);
+}
+
+.confirm-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-h3);
+  font-weight: 700;
+}
+
+.confirm-message {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-caption);
+  color: #4a5363;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.confirm-button {
+  flex: 1;
+  min-height: 48px;
+  border: none;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--font-button);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.confirm-button--danger {
+  background: var(--color-red);
+  color: var(--color-white);
+}
+
+.confirm-button--cancel {
+  background: var(--color-soft-gray);
+  color: var(--color-charcoal);
+}
+
+.confirm-button:active {
+  filter: brightness(0.92);
+}
+
+.confirm-button:focus-visible {
+  outline-color: var(--color-blue);
+}

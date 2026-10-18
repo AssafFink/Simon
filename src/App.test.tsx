@@ -15,7 +15,7 @@ describe('App', () => {
     expect(
       screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === 'שלב 1 מתוך 10'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'התחל משחק' })).toBeInTheDocument();
     for (const label of ['ירוק', 'אדום', 'צהוב', 'כחול']) {
       expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
     }
@@ -50,12 +50,13 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'על המשחק' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /10\s*המשחקים האחרונים/ })).toBeInTheDocument();
     expect(screen.getByText('עדיין אין משחקים שמורים.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'התחל' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'מחק היסטוריה' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'התחל משחק' })).not.toBeInTheDocument();
     expect(nav.getByRole('button', { name: 'אודות' })).toHaveAttribute('aria-current', 'page');
     expect(window.location.href).toBe(startUrl);
 
     await user.click(nav.getByRole('button', { name: 'בית' }));
-    expect(screen.getByRole('button', { name: 'התחל' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'התחל משחק' })).toBeInTheDocument();
     expect(nav.getByRole('button', { name: 'בית' })).toHaveAttribute('aria-current', 'page');
     expect(window.location.href).toBe(startUrl);
   });

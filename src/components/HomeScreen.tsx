@@ -11,8 +11,10 @@ type Props = {
   showResult: boolean;
   litColor: SimonColor | null;
   audioError: boolean;
+  saveError: boolean;
   onStart: () => void;
   onResume: () => void;
+  onDismiss: () => void;
   onPressStart: (color: SimonColor) => void;
   onPressEnd: () => void;
 };
@@ -26,12 +28,12 @@ const BOARD_MODE: Record<GameState['status'], BoardMode> = {
   lost: 'over',
 };
 
-export default function HomeScreen({ game, displayRound, showResult, litColor, audioError, onStart, onResume, onPressStart, onPressEnd }: Props) {
+export default function HomeScreen({ game, displayRound, showResult, litColor, audioError, saveError, onStart, onResume, onDismiss, onPressStart, onPressEnd }: Props) {
   const { status } = game;
   const isOver = status === 'won' || status === 'lost';
 
   let statusText = '';
-  const retryLabel = status === 'paused' ? 'המשך משחק' : isOver ? 'שחק שוב' : 'התחל';
+  const retryLabel = status === 'paused' ? 'המשך משחק' : 'התחל משחק';
   if (audioError) statusText = `לא ניתן להפעיל את הצלילים. לחץ שוב על "${retryLabel}".`;
   else if (status === 'presenting') statusText = 'המשחק מציג את הרצף';
   else if (status === 'awaitingInput') statusText = 'התור שלך';
@@ -53,11 +55,11 @@ export default function HomeScreen({ game, displayRound, showResult, litColor, a
           onPressEnd={onPressEnd}
         />
         {isOver && showResult && (
-          <GameOverOverlay outcome={status} completedRounds={game.completedRounds} onPlayAgain={onStart} />
+          <GameOverOverlay outcome={status} completedRounds={game.completedRounds} saveError={saveError} onDismiss={onDismiss} />
         )}
       </div>
       <div className="home-action">
-        {status === 'idle' && <PrimaryButton onClick={onStart}>התחל</PrimaryButton>}
+        {status === 'idle' && <PrimaryButton onClick={onStart}>התחל משחק</PrimaryButton>}
         {status === 'paused' && <PrimaryButton onClick={onResume}>המשך משחק</PrimaryButton>}
         {status === 'presenting' && <p className="action-hint">המתן...</p>}
         {status === 'awaitingInput' && <p className="action-hint">הקש על הצבעים לפי הסדר</p>}

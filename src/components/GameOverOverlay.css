@@ -45,3 +45,9 @@
 .game-over .primary-button {
   margin-top: var(--space-1);
 }
+
+.game-over-save-error {
+  margin: 0;
+  font-size: var(--font-caption);
+  color: #ff6b62;
+}
