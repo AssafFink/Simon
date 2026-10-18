@@ -20,9 +20,27 @@
   color: var(--color-text-muted);
 }
 
+.status-line--error {
+  color: var(--color-red);
+  text-align: center;
+}
+
+.board-area {
+  position: relative;
+  width: 100%;
+}
+
 .home-action {
   width: 100%;
+  min-height: 52px;
   display: flex;
+  align-items: center;
   justify-content: center;
   margin-top: var(--space-4);
+}
+
+.action-hint {
+  margin: 0;
+  font-size: var(--font-body);
+  color: var(--color-text-muted);
 }

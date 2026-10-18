@@ -27,8 +27,30 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: filter 120ms ease, box-shadow 120ms ease;
+  -webkit-touch-callout: none;
+  transition: filter 60ms ease, box-shadow 60ms ease;
 }
+
+.simon-pad:disabled {
+  cursor: default;
+}
+
+/* Presenting: every pad dims, the lit one glows at full brightness. */
+.simon-board[data-mode="presenting"] .simon-pad {
+  filter: brightness(0.45) saturate(0.7);
+}
+
+.simon-board .simon-pad[data-lit="true"] {
+  position: relative;
+  z-index: 1;
+  filter: brightness(1.25) saturate(1.1);
+  box-shadow: 0 0 28px 6px var(--pad-glow), inset 0 0 18px rgba(255, 255, 255, 0.55);
+}
+
+.simon-pad--green { --pad-glow: rgba(0, 210, 106, 0.85); }
+.simon-pad--red { --pad-glow: rgba(255, 59, 48, 0.85); }
+.simon-pad--yellow { --pad-glow: rgba(255, 214, 0, 0.85); }
+.simon-pad--blue { --pad-glow: rgba(0, 163, 255, 0.85); }
 
 .simon-pad[data-position="top-left"] {
   grid-area: top-left;

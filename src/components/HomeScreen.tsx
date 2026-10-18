@@ -1,19 +1,61 @@
-import SimonBoard from './SimonBoard.tsx';
+import SimonBoard, { type BoardMode } from './SimonBoard.tsx';
 import PrimaryButton from './PrimaryButton.tsx';
-import { TOTAL_ROUNDS } from '../game/colors.ts';
+import GameOverOverlay from './GameOverOverlay.tsx';
+import { TOTAL_ROUNDS, type SimonColor } from '../game/colors.ts';
+import type { GameState } from '../game/gameReducer.ts';
 import './HomeScreen.css';
 
-export default function HomeScreen() {
+type Props = {
+  game: GameState;
+  displayRound: number;
+  showResult: boolean;
+  litColor: SimonColor | null;
+  audioError: boolean;
+  onStart: () => void;
+  onPressStart: (color: SimonColor) => void;
+  onPressEnd: () => void;
+};
+
+const BOARD_MODE: Record<GameState['status'], BoardMode> = {
+  idle: 'idle',
+  presenting: 'presenting',
+  awaitingInput: 'input',
+  won: 'over',
+  lost: 'over',
+};
+
+export default function HomeScreen({ game, displayRound, showResult, litColor, audioError, onStart, onPressStart, onPressEnd }: Props) {
+  const { status } = game;
+  const isOver = status === 'won' || status === 'lost';
+
+  let statusText = '';
+  if (audioError) statusText = `לא ניתן להפעיל את הצלילים. לחץ שוב על "${isOver ? 'שחק שוב' : 'התחל'}".`;
+  else if (status === 'presenting') statusText = 'המשחק מציג את הרצף';
+  else if (status === 'awaitingInput') statusText = 'התור שלך';
+
   return (
     <section className="home-screen">
       <p className="round-indicator">
-        שלב <bdi>1</bdi> מתוך <bdi>{TOTAL_ROUNDS}</bdi>
+        שלב <bdi>{displayRound}</bdi> מתוך <bdi>{TOTAL_ROUNDS}</bdi>
       </p>
-      {/* Reserved status line so the layout stays stable once game states arrive. */}
-      <p className="status-line" aria-live="polite" />
-      <SimonBoard />
+      <p className={`status-line${audioError ? ' status-line--error' : ''}`} aria-live="polite">
+        {statusText}
+      </p>
+      <div className="board-area">
+        <SimonBoard
+          mode={BOARD_MODE[status]}
+          litColor={litColor}
+          onPressStart={onPressStart}
+          onPressEnd={onPressEnd}
+        />
+        {isOver && showResult && (
+          <GameOverOverlay outcome={status} completedRounds={game.completedRounds} onPlayAgain={onStart} />
+        )}
+      </div>
       <div className="home-action">
-        <PrimaryButton>התחל</PrimaryButton>
+        {status === 'idle' && <PrimaryButton onClick={onStart}>התחל</PrimaryButton>}
+        {status === 'presenting' && <p className="action-hint">המתן...</p>}
+        {status === 'awaitingInput' && <p className="action-hint">הקש על הצבעים לפי הסדר</p>}
       </div>
     </section>
   );

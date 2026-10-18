@@ -1,6 +1,8 @@
-import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, Ref } from 'react';
 import './PrimaryButton.css';
 
-export default function PrimaryButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+type Props = ButtonHTMLAttributes<HTMLButtonElement> & { ref?: Ref<HTMLButtonElement> };
+
+export default function PrimaryButton(props: Props) {
   return <button type="button" {...props} className="primary-button" />;
 }
