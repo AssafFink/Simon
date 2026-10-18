@@ -57,5 +57,7 @@
 
 ## פקודות הרצה
 > Claude ממלא זאת ברגע שהאפליקציה יכולה לרוץ (בדרך כלל בסיום Milestone 1), ומעדכן אם משהו משתנה.
-- **הרצה (dev):** `npm run dev` (ואז לפתוח http://localhost:5173)
+- **הרצה (dev):** `npm run dev` (ואז לפתוח http://localhost:5173/Simon/)
+- **בדיקת PWA/Offline מקומית:** `npm run build` ואז `npm run preview` (ואז לפתוח http://localhost:4173/Simon/)
+- **Production:** https://assaffink.github.io/Simon/ — נפרס אוטומטית מ-GitHub Actions בכל push ל-`main`
 - **בדיקות (test):** `npm run test` (וגם `npm run typecheck`, `npm run build`)

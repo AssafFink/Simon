@@ -253,3 +253,18 @@ type HistoryData = {
 **הקשר:** לפי בקשת המשתמש, הודעת הניצחון/ההפסד מכילה "אישור" במקום "שחק שוב", והלחיצה רק סוגרת את ההודעה ומחזירה למסך הבית עם "התחל משחק".
 **החלטה:** Action חדש `dismiss` (רק מ-`won`/`lost`) מחזיר ל-`initialGameState`, תוך שמירת `gameId` ו-`presentationId`, כך שהמשחק הבא מקבל `gameId` חדש וה-Guard של שמירת ההיסטוריה ממשיך לעבוד. "אישור" אינו Gesture אודיו; `AudioContext` נפתח רק ב-"התחל משחק" ו-"המשך משחק".
 **השלכות:** אין יותר התחלת משחק ישירות ממצב סיום; היציאה מ-`won` מנקה את הקונפטי דרך ה-Cleanup הקיים. התוצאה נשמרת כבר בכניסה ל-`won`/`lost`, ולכן "אישור" אינו משפיע על ההיסטוריה.
+
+### ADR-6: עדכון גרסה ללא חלונית וללא Reload
+**הקשר:** §2.7 מחייב שעדכון Service Worker לא ירענן או יקטע משחק פעיל, ומתיר (אך אינו מחייב) בקשת עדכון בעברית. ל-`DESIGN.md` אין עיצוב לחלונית כזו.
+**החלטה:** `registerType: "prompt"` עם `injectRegister: false`; הרישום ב-`src/main.tsx` דרך `registerSW({ immediate: true })` בלי `onNeedRefresh`. אין `skipWaiting` ואין `clientsClaim`. גרסה חדשה מותקנת ברקע וממתינה (`waiting`) עד שכל חלונות האפליקציה נסגרים.
+**השלכות:** משחק פעיל לעולם אינו נקטע בגלל עדכון. גרסה חדשה נכנסת לתוקף רק בפתיחה הבאה לאחר סגירה מלאה, ולא מוצגת הודעת "גרסה חדשה"; הוספת הודעה כזו היא שינוי עיצוב שדורש אישור.
+
+### ADR-7: אייקונים ממקור SVG יחיד, נוצרים פעם אחת ונשמרים ב-Repository
+**הקשר:** `DESIGN.md` §2.4 מגדיר App Icon ש-Claude יוצר; ה-Manifest צריך PNG בגדלים 192 ו-512, Maskable ו-Favicon.
+**החלטה:** `public/icon.svg` נכתב ידנית (לוח בקוטר ~78% מהקנבס, בתוך ה-Safe Zone של Maskable, על רקע `#0A1628`). הקבצים `pwa-64/192/512`, `maskable-icon-512x512`, `apple-touch-icon-180x180` ו-`favicon.ico` נוצרים ממנו ב-`npm run generate-pwa-assets` (`@vite-pwa/assets-generator`, תצורה ב-`pwa-assets.config.ts`) ונשמרים ב-`public/`.
+**השלכות:** ה-CI אינו תלוי בכלי ההמרה. שינוי באייקון = עריכת ה-SVG והרצת הסקריפט מחדש.
+
+### ADR-8: `base: "/Simon/"` בכל הסביבות
+**הקשר:** האתר נפרס תחת `https://assaffink.github.io/Simon/`, ובעיות נתיב (404 לנכסים, Scope של Service Worker) מתגלות בדרך כלל רק בפריסה.
+**החלטה:** `base: '/Simon/'` ב-`vite.config.ts` גם ב-dev וגם ב-preview; `start_url` ו-`scope` של ה-Manifest נגזרים מאותו קבוע. ה-Workflow `.github/workflows/deploy.yml` מריץ typecheck, בדיקות ו-Build לפני פריסה ל-Pages.
+**השלכות:** הכתובת המקומית היא `http://localhost:5173/Simon/` (dev) ו-`http://localhost:4173/Simon/` (preview). אם ה-Repository ישנה שם או יעבור ל-Custom Domain, יש לעדכן את הקבוע.
