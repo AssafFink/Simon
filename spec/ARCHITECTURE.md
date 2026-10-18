@@ -226,3 +226,10 @@ type HistoryData = {
 7. [MDN – Page Visibility API](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API) – אירועי הסתרה וחזרה של אפליקציה.
 8. [Vite PWA – Prompt for Update](https://vite-pwa-org.netlify.app/guide/prompt-for-update) – שליטה בעדכוני Service Worker ללא רענון אוטומטי.
 9. [GitHub Docs – GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions) – מכסות וחיוב Actions.
+
+## החלטות מרכזיות (ADRs)
+
+### ADR-1: לוח ה-Simon כ-CSS Grid עם ארבעה כפתורי `button`
+**הקשר:** סעיף 2.4 מתיר CSS Grid/clip-path או SVG ללוח. נדרשים כפתורים סמנטיים ונגישים, אזור מגע מלא לכל רבע, וסידור צבעים מרחבי שאינו מתהפך ב-RTL.
+**החלטה:** הלוח הוא מיכל עגול עם CSS Grid בגודל 2×2; כל רבע הוא `<button>` עם `aria-label` בעברית ופינה חיצונית מעוגלת (רבע עיגול), ופסי ההפרדה הם ה-`gap` של הגריד. המיכל מוגדר `direction: ltr` ומיקום כל רבע נקבע ב-`grid-area` מפורש לפי `src/game/colors.ts`. הדיסק המרכזי הוא שכבה דקורטיבית ללא קלט.
+**השלכות:** אין צורך בגיאומטריית SVG או בחישובי Hit-test; מצבי Glow ועמעום יתווספו ב-CSS בלבד. ה-Hit area של כל רבע הוא הריבוע שלו בגריד מינוס הפינה המעוגלת; האזור שמתחת לדיסק המרכזי אינו לחיץ.
