@@ -10,6 +10,7 @@
 | Build ופיתוח מקומי | **Vite** עם React plugin | שרת פיתוח, Build סטטי ל-`dist`, התאמה לפריסת GitHub Pages |
 | עיצוב | **CSS רגיל** ו-CSS Variables | ממשק Mobile-First, כיווניות RTL, לוח מעגלי, אנימציות ומשוב מגע; ללא ספריית UI כבדה |
 | ניהול מצב | React Hooks עם **`useReducer`** | State machine מפורשת למעברי מצב ולשמירת משחק פעיל בזיכרון בלבד |
+| גופן | **`@fontsource/heebo`** | הגופן Heebo נארז בתוך ה-Build ונשמר ב-Precache; ללא טעינה מ-Google Fonts, כדי לעבוד Offline |
 | אודיו | **Web Audio API** | הפקת ארבעה צלילים נבדלים וצלילי ניצחון/הפסד באופן מקומי |
 | אפקט ניצחון | **canvas-confetti** | קונפטי בניצחון בלבד, ללא שרת או נכסים חיצוניים |
 | היסטוריית משחקים | **Web Storage API (`localStorage`)** | שמירת עשר תוצאות אחרונות בלבד |
@@ -110,7 +111,7 @@ won / lost ── "שחק שוב" ──> presenting (שלב 1 חדש)
 
 ### 2.4 קצב הצגה, מגע ואודיו
 
-- הגדרת משך הארה ומשך הפסקה כקבועי Configuration משותפים לכל השלבים, ללא האצה; ערכי המשכים המדויקים ייקבעו בעיצוב/מימוש, בהתאם ל-PRD.
+- הגדרת משך הארה ומשך הפסקה כקבועי Configuration משותפים לכל השלבים, ללא האצה; הערכים המדויקים מוגדרים בטבלת "קצב הצגת הרצף" ב-`DESIGN.md` (סעיף 1.1).
 - בעת Playback, להפעיל Highlight של רבע אחד וצלילו, לכבותו, להמתין הפסקה ולחזור; לוודא שהשמע נעצר גם אם פקע או בוטל Timer.
 - יישום הלוח באמצעות ארבעה רכיבי `button` סמנטיים המחולקים גאומטרית לרבעי מעגל; ניתן להשתמש ב-CSS Grid/clip-path או SVG עם אזורי Hit ייעודיים, אך נדרשים Target מגע מספק, Feedback ברור ואיסור בחירת טקסט / Double-tap בעייתי.
 - כל רבע חייב להיות מזוהה באמצעות Accessible Name בעברית, גם כאשר הצבע מוצג חזותית בלבד; תגובת הלחיצה תציג Highlight ותשמיע את צליל הרבע. צבע לא יהיה חיווי יחיד למצב המשחק.
@@ -164,8 +165,8 @@ type HistoryData = {
 
 ### 2.7 PWA, Offline ועדכונים
 
-- להגדיר ב-Manifest לפחות `name` ו-`short_name` בעברית, `lang: "he"`, `dir: "rtl"`, אייקונים מתאימים להתקנה (`192x192`, `512x512`, כולל Maskable אם נדרש), `display: "standalone"`, `start_url` ו-`scope` התואמים לנתיב הפריסה בפועל.
-- להגדיר `vite-plugin-pwa` עם `strategies: "generateSW"` ו-Precache של HTML, JavaScript, CSS, אייקונים וכל משאב סטטי הדרוש לאפליקציה. אין תלות בפונטים, קובצי Audio או Scripts מ-CDN חיצוני. להשתמש ב-Fallback ל-SPA בתוך ה-Scope של האפליקציה בלבד.
+- להגדיר ב-Manifest לפחות `name` ו-`short_name` בעברית, `lang: "he"`, `dir: "rtl"`, אייקונים מתאימים להתקנה (`192x192`, `512x512`, כולל Maskable אם נדרש; Claude מייצר אותם לפי הגדרת ה-App Icon ב-`DESIGN.md`, מקובץ SVG מקור אחד שנשמר בפרויקט), `display: "standalone"`, `start_url` ו-`scope` התואמים לנתיב הפריסה בפועל.
+- להגדיר `vite-plugin-pwa` עם `strategies: "generateSW"` ו-Precache של HTML, JavaScript, CSS, אייקונים וכל משאב סטטי הדרוש לאפליקציה. אין תלות בפונטים, קובצי Audio או Scripts מ-CDN חיצוני; קובצי הגופן Heebo (`@fontsource/heebo`, רק המשקלים שבשימוש: Regular, Semibold, Bold) נכללים ב-Precache. להשתמש ב-Fallback ל-SPA בתוך ה-Scope של האפליקציה בלבד.
 - להגדיר **`registerType: "prompt"`**, ולא `autoUpdate`: כאשר יש עדכון, ניתן להציג בקשת עדכון בעברית רק כשהמשחק אינו פעיל; במהלך משחק פעיל לדחות הצעה/הפעלה שתגרום ל-Reload. אין להפעיל `skipWaiting` בצורה שקוטעת Session פעיל. לאחר אישור עדכון, Refresh רשאי להתחיל משחק חדש בהתאם ל-PRD. [8]
 - יש לבדוק טעינה מלאה Online לפחות פעם אחת; לאחר שה-Service Worker ו-Precache התקינו בהצלחה, לנתק רשת ולוודא ששני המסכים, הצלילים, המשחק וההיסטוריה פועלים. Offline אינו מובטח לפני השלמת Cache או אחרי ניקוי נתוני אתר.
 - אין להשתמש ב-Background Sync, Push Notifications או Cache דינמי של API: אין להם שימוש במוצר זה.
@@ -194,7 +195,9 @@ type HistoryData = {
 
 **נתיב פריסה:**
 
-- לפרויקט המתארח ב-`https://<user>.github.io/<repo>/` לקבוע `base: "/<repo>/"` ב-Vite. התאמה מקבילה של `start_url`, `scope`, קישורי Assets ו-Service Worker Scope; לא להשתמש בנתיבים מוחלטים ל-`/` שמדלגים על שם ה-Repository.
+- ה-Repository של הפרויקט הוא `https://github.com/AssafFink/Simon`, ולכן כתובת ה-Production היא `https://assaffink.github.io/Simon/` ויש לקבוע `base: "/Simon/"` ב-Vite. הנתיב **רגיש לאותיות גדולות וקטנות** – `Simon` ב-S גדולה, בדיוק כשם ה-Repository.
+- GitHub Pages בחשבון GitHub Free זמין ל-Repository **ציבורי** בלבד. לפני פריסה ראשונה יש לוודא שה-Repository ציבורי (Settings → General → Danger Zone → Change visibility), או שהחשבון בתוכנית בתשלום.
+- באופן כללי, לפרויקט המתארח ב-`https://<user>.github.io/<repo>/` קובעים `base: "/<repo>/"` ב-Vite. התאמה מקבילה של `start_url`, `scope`, קישורי Assets ו-Service Worker Scope; לא להשתמש בנתיבים מוחלטים ל-`/` שמדלגים על שם ה-Repository.
 - לאתר Root או Custom Domain הנתיב עשוי להיות `/`. יש להגדיר אותו לפי כתובת ה-Production האמיתית. [2]
 - מכיוון שמדובר בשני מסכים פנימיים ב-SPA, אין צורך ב-History Router או בשרת Rewrite להפעלת `/about`; כך נמנעת בעיית Deep Link ב-GitHub Pages.
 
