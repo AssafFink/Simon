@@ -165,7 +165,7 @@ type HistoryData = {
 
 ### 2.7 PWA, Offline ועדכונים
 
-- להגדיר ב-Manifest לפחות `name` ו-`short_name` בעברית, `lang: "he"`, `dir: "rtl"`, אייקונים מתאימים להתקנה (`192x192`, `512x512`, כולל Maskable אם נדרש; Claude מייצר אותם לפי הגדרת ה-App Icon ב-`DESIGN.md`, מקובץ SVG מקור אחד שנשמר בפרויקט), `display: "standalone"`, `start_url` ו-`scope` התואמים לנתיב הפריסה בפועל.
+- להגדיר ב-Manifest לפחות `name` ו-`short_name` באנגלית (`Simon`, לפי בקשת המשתמש; כותרת המסך בתוך האפליקציה נשארת **"סיימון"**), `id` מפורש, `lang: "he"`, `dir: "rtl"`, אייקונים מתאימים להתקנה (`192x192`, `512x512`, כולל Maskable אם נדרש; Claude מייצר אותם לפי הגדרת ה-App Icon ב-`DESIGN.md`, מקובץ SVG מקור אחד שנשמר בפרויקט), `display: "standalone"`, `start_url` ו-`scope` התואמים לנתיב הפריסה בפועל.
 - להגדיר `vite-plugin-pwa` עם `strategies: "generateSW"` ו-Precache של HTML, JavaScript, CSS, אייקונים וכל משאב סטטי הדרוש לאפליקציה. אין תלות בפונטים, קובצי Audio או Scripts מ-CDN חיצוני; קובצי הגופן Heebo (`@fontsource/heebo`, רק המשקלים שבשימוש: Regular, Semibold, Bold) נכללים ב-Precache. להשתמש ב-Fallback ל-SPA בתוך ה-Scope של האפליקציה בלבד.
 - להגדיר **`registerType: "prompt"`**, ולא `autoUpdate`: כאשר יש עדכון, ניתן להציג בקשת עדכון בעברית רק כשהמשחק אינו פעיל; במהלך משחק פעיל לדחות הצעה/הפעלה שתגרום ל-Reload. אין להפעיל `skipWaiting` בצורה שקוטעת Session פעיל. לאחר אישור עדכון, Refresh רשאי להתחיל משחק חדש בהתאם ל-PRD. [8]
 - יש לבדוק טעינה מלאה Online לפחות פעם אחת; לאחר שה-Service Worker ו-Precache התקינו בהצלחה, לנתק רשת ולוודא ששני המסכים, הצלילים, המשחק וההיסטוריה פועלים. Offline אינו מובטח לפני השלמת Cache או אחרי ניקוי נתוני אתר.
@@ -268,3 +268,8 @@ type HistoryData = {
 **הקשר:** האתר נפרס תחת `https://assaffink.github.io/Simon/`, ובעיות נתיב (404 לנכסים, Scope של Service Worker) מתגלות בדרך כלל רק בפריסה.
 **החלטה:** `base: '/Simon/'` ב-`vite.config.ts` גם ב-dev וגם ב-preview; `start_url` ו-`scope` של ה-Manifest נגזרים מאותו קבוע. ה-Workflow `.github/workflows/deploy.yml` מריץ typecheck, בדיקות ו-Build לפני פריסה ל-Pages.
 **השלכות:** הכתובת המקומית היא `http://localhost:5173/Simon/` (dev) ו-`http://localhost:4173/Simon/` (preview). אם ה-Repository ישנה שם או יעבור ל-Custom Domain, יש לעדכן את הקבוע.
+
+### ADR-9: שם התקנה `Simon` ו-`id` מפורש ב-Manifest
+**הקשר:** ב-Chrome לאנדרואיד הופיעה הודעה שהאפליקציה "כבר מותקנת" למרות שלא הותקנה, ופתיחתה נכשלה ("Could not open app"), גם אחרי ניקוי נתוני האתר. ללא `id`, הדפדפן מזהה את האפליקציה לפי `start_url`, ולכן רישום התקנה ישן ושגוי במכשיר נצמד לאותה כתובת. המשתמש ביקש גם ששם האפליקציה המותקנת יהיה באנגלית.
+**החלטה:** הוספת `id: '/Simon/app'` ל-Manifest, ושינוי `name`/`short_name` ל-`Simon`. כותרת המסך ו-`<title>` נשארים "סיימון".
+**השלכות:** הדפדפן רואה את האפליקציה כזהות חדשה ומתעלם מרישום ישן. אסור לשנות את ה-`id` בעתיד, אחרת התקנות קיימות ייחשבו לאפליקציה אחרת.

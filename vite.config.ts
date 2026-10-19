@@ -17,8 +17,10 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       manifest: {
-        name: 'סיימון',
-        short_name: 'סיימון',
+        // Explicit id gives the installed app a stable identity, separate from any stale install record.
+        id: `${base}app`,
+        name: 'Simon',
+        short_name: 'Simon',
         description: 'משחק זיכרון של צבעים וצלילים – עשרה שלבים',
         lang: 'he',
         dir: 'rtl',
