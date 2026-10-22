@@ -262,7 +262,7 @@ type HistoryData = {
 ### ADR-7: אייקונים ממקור SVG יחיד, נוצרים פעם אחת ונשמרים ב-Repository
 **הקשר:** `DESIGN.md` §2.4 מגדיר App Icon ש-Claude יוצר; ה-Manifest צריך PNG בגדלים 192 ו-512, Maskable ו-Favicon.
 **החלטה:** `public/icon.svg` נכתב ידנית (לוח בקוטר ~78% מהקנבס, בתוך ה-Safe Zone של Maskable, על רקע `#0A1628`). הקבצים `pwa-64/192/512`, `maskable-icon-512x512`, `apple-touch-icon-180x180` ו-`favicon.ico` נוצרים ממנו ב-`npm run generate-pwa-assets` (`@vite-pwa/assets-generator`, תצורה ב-`pwa-assets.config.ts`) ונשמרים ב-`public/`.
-**השלכות:** ה-CI אינו תלוי בכלי ההמרה. שינוי באייקון = עריכת ה-SVG והרצת הסקריפט מחדש.
+**השלכות:** ה-CI אינו תלוי בכלי ההמרה. שינוי באייקון = עריכת ה-SVG והרצת הסקריפט מחדש. מאז ADR-10, `public/icon.svg` הוא עותק של ציור הלוח (אותם `path` מ-`simonBoardShapes.ts`), מוקטן לרדיוס 200 מתוך 512; שינוי בציור הלוח מחייב עדכון ידני של האייקון.
 
 ### ADR-8: `base: "/Simon/"` בכל הסביבות
 **הקשר:** האתר נפרס תחת `https://assaffink.github.io/Simon/`, ובעיות נתיב (404 לנכסים, Scope של Service Worker) מתגלות בדרך כלל רק בפריסה.
