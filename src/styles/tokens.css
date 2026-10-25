@@ -12,6 +12,9 @@
   /* Derived shades of the palette above */
   --color-surface-active: #1e3556;
   --color-text-muted: rgba(229, 229, 229, 0.7);
+  /* Darker blue/red for button fills and focus rings: pass WCAG AA (4.5:1) with white text */
+  --color-blue-strong: #0073bb;
+  --color-red-strong: #d92d20;
 
   --space-1: 8px;
   --space-2: 12px;

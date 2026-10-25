@@ -38,6 +38,11 @@
   text-align: center;
 }
 
+/* Focused only by script after deleting history; it is not a control, so no ring. */
+.history-title:focus {
+  outline: none;
+}
+
 .history-message {
   margin: 0;
   text-align: center;

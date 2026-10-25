@@ -14,20 +14,45 @@ export default function ConfirmDialog({ title, message, confirmLabel, cancelLabe
   const titleId = useId();
   const messageId = useId();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Focus starts on the safe choice; Escape cancels.
+  // On close, focus goes back to whatever opened the dialog (if it still exists).
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    return () => {
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
+
+  // Focus starts on the safe choice; Escape cancels; Tab stays inside the dialog.
   useEffect(() => {
     cancelRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel();
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const buttons = dialogRef.current.querySelectorAll<HTMLButtonElement>('button');
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (!dialogRef.current.contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
 
+  // Clicking the scrim is a pointer shortcut only; keyboard users have Escape and the cancel button.
   return (
     <div className="confirm-scrim" onClick={(e) => e.target === e.currentTarget && onCancel()}>
       <div
+        ref={dialogRef}
         className="confirm-dialog"
         role="alertdialog"
         aria-modal="true"

@@ -53,7 +53,7 @@
 }
 
 .confirm-button--danger {
-  background: var(--color-red);
+  background: var(--color-red-strong);
   color: var(--color-white);
 }
 
@@ -67,5 +67,5 @@
 }
 
 .confirm-button:focus-visible {
-  outline-color: var(--color-blue);
+  outline-color: var(--color-blue-strong);
 }

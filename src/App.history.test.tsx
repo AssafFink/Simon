@@ -198,6 +198,40 @@ describe('game history', () => {
     expect(screen.queryByRole('button', { name: 'מחק היסטוריה' })).toBeNull();
   });
 
+  it('delete dialog keeps Tab inside and returns focus to the opener on cancel', async () => {
+    addResult({ id: 'a', finishedAt: new Date().toISOString(), completedRounds: 2, outcome: 'loss' });
+    render(<App />);
+    goTo('אודות');
+
+    const opener = screen.getByRole('button', { name: 'מחק היסטוריה' });
+    opener.focus();
+    await clickButton('מחק היסטוריה');
+    const dialog = screen.getByRole('alertdialog');
+    const confirm = within(dialog).getByRole('button', { name: 'מחק' });
+    const cancel = within(dialog).getByRole('button', { name: 'ביטול' });
+
+    fireEvent.keyDown(window, { key: 'Tab' });
+    expect(confirm).toHaveFocus();
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+    expect(cancel).toHaveFocus();
+
+    fireEvent.click(cancel);
+    expect(opener).toHaveFocus();
+  });
+
+  it('after confirming delete, focus moves to the history title instead of being lost', async () => {
+    addResult({ id: 'a', finishedAt: new Date().toISOString(), completedRounds: 2, outcome: 'loss' });
+    render(<App />);
+    goTo('אודות');
+
+    screen.getByRole('button', { name: 'מחק היסטוריה' }).focus();
+    await clickButton('מחק היסטוריה');
+    await clickButton('מחק');
+
+    expect(screen.queryByRole('button', { name: 'מחק היסטוריה' })).toBeNull();
+    expect(screen.getByRole('heading', { name: /המשחקים האחרונים/ })).toHaveFocus();
+  });
+
   it('a failed save shows a message and the game can go on', async () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('full', 'QuotaExceededError');

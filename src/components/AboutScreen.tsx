@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { TOTAL_ROUNDS } from '../game/colors.ts';
 import type { GameResult } from '../history/historyStorage.ts';
 import HistoryCard from './HistoryCard.tsx';
@@ -15,8 +15,12 @@ type Props = {
 export default function AboutScreen({ results, loadError, clearError, onClear }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const closeConfirm = useCallback(() => setConfirmOpen(false), []);
+  const historyTitleRef = useRef<HTMLHeadingElement>(null);
 
+  // The delete button disappears with the history, so focus lands on the history title.
+  // If the delete fails the button stays, and the dialog returns focus to it instead.
   const confirmDelete = () => {
+    historyTitleRef.current?.focus();
     setConfirmOpen(false);
     onClear();
   };
@@ -32,7 +36,7 @@ export default function AboutScreen({ results, loadError, clearError, onClear }:
         </p>
       </article>
 
-      <h2 className="section-title history-title">
+      <h2 ref={historyTitleRef} tabIndex={-1} className="section-title history-title">
         <bdi>{TOTAL_ROUNDS}</bdi> המשחקים האחרונים
       </h2>
       {loadError && (
